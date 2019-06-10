@@ -1,0 +1,7 @@
+{
+  "URLs": [
+    "http://example.com/binpkg/testpackage",
+    "http://example.net/binpkg/testpackage",
+    "http://example.org/binpkg/testpackage"
+  ]
+}
