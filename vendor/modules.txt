@@ -1,2 +1,3 @@
-# github.com/frankbraun/codechain v0.0.0-20190530201430-c67085230c09
-github.com/frankbraun/codechain/util
+# github.com/frankbraun/codechain v0.0.0-20190610193940-9425faaade75
+github.com/frankbraun/codechain/util/file
+github.com/frankbraun/codechain/util/hex

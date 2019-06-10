@@ -3,7 +3,10 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
+	"math/rand"
+	"time"
 )
 
 type Config struct {
@@ -30,4 +33,13 @@ func (cfg *Config) Marshal() string {
 		panic(err) // should never happen
 	}
 	return string(jsn)
+}
+
+// RandomURL returns random URL from cfg.
+func (cfg *Config) RandomURL() (string, error) {
+	if len(cfg.URLs) == 0 {
+		return "", errors.New("config: no URL defined")
+	}
+	rand.Seed(time.Now().Unix())
+	return cfg.URLs[rand.Intn(len(cfg.URLs))], nil
 }
