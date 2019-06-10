@@ -1,6 +1,12 @@
 binpkg — a binary installer for Codechain secure packages
 ---------------------------------------------------------
 
+[![GoDoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://godoc.org/github.com/frankbraun/binpkg)
+[![Build
+Status](https://img.shields.io/travis/frankbraun/binpkg.svg?style=flat-square)](https://travis-ci.org/frankbraun/binpkg)
+[![Go Report
+Card](https://goreportcard.com/badge/github.com/frankbraun/binpkg?style=flat-square)](https://goreportcard.com/report/github.com/frankbraun/binpkg)
+
 `binpkg` allows to install binaries as secure packages with
 [Codechain](https://github.com/frankbraun/codechain).
 
