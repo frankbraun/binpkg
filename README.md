@@ -44,6 +44,32 @@ outside of the scope of `binpkg`.
 Using Codechain secure dependencies allows to extend Codechain with
 binary packages without blowing up Codechain itself unnecessarily.
 
+### Commands
+
+#### `binpkg download`
+
+Download binary package for current platform, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Download_specification)
+for details.
+
+#### `binpkg install`
+
+Install downloaded binary package for current platform, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Install_specification)
+for details.
+
+#### `binpkg uninstall`
+
+Uninstall installed binary package for current platform, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Uninstall_specification)
+for details.
+
+#### `binpkg generate $bindir`
+
+Generate binary package for `$bindir` directory, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Generate_specification)
+for details.
+
 ### Files and directories
 
 #### `config.binpkg`
@@ -108,29 +134,3 @@ where:
     notation (lowercase) of all installed files for this platform and
     `treehash.tar.gz` contains the corresponding directory tree as a
     `.tar.gz` archive.
-
-### Commands
-
-#### `binpkg download`
-
-Download binary package for current platform, see
-[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Download_specification)
-for details.
-
-#### `binpkg install`
-
-Install downloaded binary package for current platform, see
-[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Install_specification)
-for details.
-
-#### `binpkg uninstall`
-
-Uninstall installed binary package for current platform, see
-[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Uninstall_specification)
-for details.
-
-#### `binpkg generate $bindir`
-
-Generate binary package for `$bindir` directory, see
-[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Generate_specification)
-for details.
