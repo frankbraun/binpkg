@@ -8,6 +8,7 @@ import (
 
 	"github.com/frankbraun/binpkg/config"
 	"github.com/frankbraun/binpkg/internal/def"
+	"github.com/frankbraun/binpkg/tar"
 	"github.com/frankbraun/codechain/tree"
 	"github.com/frankbraun/codechain/util/file"
 	"github.com/frankbraun/codechain/util/hex"
@@ -53,13 +54,18 @@ func Generate(bindir string) error {
 
 	// 5. Write the directory hierarchy below `$bindir` as as archive to
 	//    `.codechain/binpkg/archives/treehash.tar.gz`.
-
 	if err := os.MkdirAll(def.ArchiveDir, 0755); err != nil {
 		return err
 	}
 	archive := filepath.Join(def.ArchiveDir, treehash+".tar.gz")
-
-	//fmt.Printf("'%s' written \n", archive)
+	var files []string
+	for _, entry := range entries {
+		files = append(files, entry.Filename)
+	}
+	if err := tar.CreateArchive(archive, bindir, files); err != nil {
+		return err
+	}
+	fmt.Printf("'%s' written \n", archive)
 
 	// 6. Display all paths `URL/$GOOS_$GOARCH/treehash.tar.gz` where
 	//    `.codechain/binpkg/archives/treehash.tar.gz` needs to be uploaded to.
