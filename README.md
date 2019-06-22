@@ -139,6 +139,3 @@ where:
 
 -   Make `hello-bin` example project.
 -   Add example `Makefile` to README.md.
--   Remove `github.com/mholt/archiver` dependency, can be written with
-    stdlib.
--   https://medium.com/@skdomino/taring-untaring-files-in-go-6b07cf56bc07

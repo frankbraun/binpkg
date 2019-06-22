@@ -35,11 +35,15 @@ func (cfg *Config) Marshal() string {
 	return string(jsn)
 }
 
-// RandomURL returns random URL from cfg.
-func (cfg *Config) RandomURL() (string, error) {
+// RandomURLs returns the URLs from cfg in random order.
+func (cfg *Config) RandomURLs() ([]string, error) {
 	if len(cfg.URLs) == 0 {
-		return "", errors.New("config: no URL defined")
+		return nil, errors.New("config: no URL defined")
 	}
+	urls := append([]string{}, cfg.URLs...)
 	rand.Seed(time.Now().Unix())
-	return cfg.URLs[rand.Intn(len(cfg.URLs))], nil
+	rand.Shuffle(len(urls), func(i, j int) {
+		urls[i], urls[j] = urls[j], urls[i]
+	})
+	return urls, nil
 }

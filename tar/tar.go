@@ -53,7 +53,39 @@ func Create(w io.Writer, root string, files []string) error {
 // Extract the files contained in the gzipped archive r to the directory
 // hierarchy rooted at root.
 func Extract(root string, r io.Reader) error {
-	return nil
+	zr, err := gzip.NewReader(r)
+	if err != nil {
+		return err
+	}
+	tr := tar.NewReader(zr)
+
+	for {
+		hdr, err := tr.Next()
+		if err != nil {
+			if err == io.EOF {
+				break // end of archive
+			}
+			return err
+		}
+		outdir := filepath.Join(root, filepath.Dir(hdr.Name))
+		if err := os.MkdirAll(outdir, 0755); err != nil {
+			return err
+		}
+		fn := filepath.Join(root, hdr.Name)
+		f, err := os.OpenFile(fn, os.O_CREATE|os.O_WRONLY, os.FileMode(hdr.Mode))
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(f, tr); err != nil {
+			f.Close()
+			return err
+		}
+		if err := f.Close(); err != nil {
+			return err
+		}
+	}
+
+	return zr.Close()
 }
 
 // CreateFile writes the files contained in root as a gzipped tar archive to
