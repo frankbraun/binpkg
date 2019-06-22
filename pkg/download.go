@@ -25,7 +25,7 @@ func Download() error {
 	platform := runtime.GOOS + "_" + runtime.GOARCH
 
 	// 3. Read the corresponding `$GOOS_$GOARCH.binpkg` file and hash it to
-	// `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
+	//    `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
 	b, err := ioutil.ReadFile(platform + ".binpkg")
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func Download() error {
 	treehash := hex.Encode(h[:])
 
 	// 4. Pick a random URL from the `config.binpkg` file and try to download
-	// `URL/$GOOS_$GOARCH/treehash.tar.gz` to `.codechain/binpkg/archives`.
+	//    `URL/$GOOS_$GOARCH/treehash.tar.gz` to `.codechain/binpkg/archives`.
 	url, err := cfg.RandomURL()
 	if err != nil {
 		return err
@@ -49,19 +49,19 @@ func Download() error {
 	}
 
 	// 5. If download (or verification, see below) failed, try next URL.
-	// Abort, if all downloads fail permanently.
+	//    Abort, if all downloads fail permanently.
 
 	// 6. Remove directory `.codechain/binpkg/$GOOS_$GOARCH`.
 
 	// 7. Create directory `.codechain/binpkg/$GOOS_$GOARCH`.
 
 	// 8. Extract `treehash.tar.gz` to `.codechain/binpkg/$GOOS_$GOARCH` and
-	// calculate tree hash. If the calculated tree hash does not equal
-	// `treehash` goto 5.
+	//    calculate tree hash. If the calculated tree hash does not equal
+	//    `treehash` goto 5.
 
 	// 9. The binary package to install for the current `$GOOS` and `$GOARCH`
-	// is now contained in the directory hierarchy under
-	// `.codechain/binpkg/$GOOS_$GOARCH`.
+	//    is now contained in the directory hierarchy under
+	//    `.codechain/binpkg/$GOOS_$GOARCH`.
 
 	return nil
 }
