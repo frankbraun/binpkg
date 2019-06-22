@@ -134,3 +134,11 @@ where:
     notation (lowercase) of all installed files for this platform and
     `treehash.tar.gz` contains the corresponding directory tree as a
     `.tar.gz` archive.
+
+### ToDo
+
+-   Make `hello-bin` example project.
+-   Add example `Makefile` to README.md.
+-   Remove `github.com/mholt/archiver` dependency, can be written with
+    stdlib.
+-   https://medium.com/@skdomino/taring-untaring-files-in-go-6b07cf56bc07
