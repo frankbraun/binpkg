@@ -140,7 +140,7 @@ where:
 To use `binpkg` with a [Codechain secure
 package](https://godoc.org/github.com/frankbraun/codechain/secpkg) add
 the `.secpkg` file of `binpkg` to the `.secdep` directory of your
-project and add a `Makefile` similar to this:
+project (as `binpkg.secpkg`) and add a `Makefile` similar to this:
 
     prefix ?= /usr/local
 
