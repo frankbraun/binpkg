@@ -21,6 +21,11 @@ func Uninstall(prefix string) error {
 		return errors.New("prefix not set")
 	}
 
+	// make sure `$prefix` exists and is a directory
+	if err := dirExists(prefix); err != nil {
+		return err
+	}
+
 	// 2. Determine the `$GOOS` and `$GOARCH` we are currently running on.
 	platform := runtime.GOOS + "_" + runtime.GOARCH
 
