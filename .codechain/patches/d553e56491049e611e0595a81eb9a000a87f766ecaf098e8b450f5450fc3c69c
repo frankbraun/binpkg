@@ -1,0 +1,38 @@
+codechain patchfile version 2
+treehash d553e56491049e611e0595a81eb9a000a87f766ecaf098e8b450f5450fc3c69c
+- f 7df1d354d0bd746ab53cc31cbae13a65aa30f8edccdeac070527dabf6ebf963b pkg/install.go
++ f fc29452f64a75836f6d74857389dbc2be9de4b3d5444b9d384e7d51b76a955df pkg/install.go
+dmppatch 4
+@@ -490,24 +490,134 @@
+ t set%22)%0A%09%7D%0A%0A
++%09// make sure %60$prefix%60 exists and is a directory%0A%09if err := dirExists(prefix); err != nil %7B%0A%09%09return err%0A%09%7D%0A%0A
+ %09// 2. Deter
+- f 2beeab829e812924d0194d509036b334ebd047ab8a5a2dab1767941adf52d559 pkg/uninstall.go
++ f 819674373a5f8fd12199460e09b00d8c58c9e0f4bd4685823ade83332abb00a4 pkg/uninstall.go
+dmppatch 4
+@@ -449,24 +449,134 @@
+ t set%22)%0A%09%7D%0A%0A
++%09// make sure %60$prefix%60 exists and is a directory%0A%09if err := dirExists(prefix); err != nil %7B%0A%09%09return err%0A%09%7D%0A%0A
+ %09// 2. Deter
++ f 99b121ef27e3c02f775661a5b489f4664d25b54b7493c793311f442a6539fcf9 pkg/util.go
+utf8file 19
+package pkg
+
+import (
+	"fmt"
+	"os"
+)
+
+// dirExists checks if filename exists and is a directory
+func dirExists(filename string) error {
+	fi, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("'%s' is not a directory", filename)
+	}
+	return nil
+}
+
+treehash 3d36c14c5d1a0bea69d7d77138f7a09296eeec5036d742914230c8763e59a1c2
