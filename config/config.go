@@ -9,8 +9,9 @@ import (
 	"time"
 )
 
+// Config for binary packages.
 type Config struct {
-	URLs []string
+	URLs []string // Download URLs
 }
 
 // Load a config.binpkg file from filename and return the Config struct.

@@ -8,7 +8,7 @@ import (
 	"github.com/frankbraun/binpkg/pkg"
 )
 
-// Unnstall implements the 'uninstall' command.
+// Uninstall implements the 'uninstall' command.
 func Uninstall(argv0 string, args ...string) error {
 	fs := flag.NewFlagSet(argv0, flag.ContinueOnError)
 	fs.Usage = func() {

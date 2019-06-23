@@ -89,8 +89,8 @@ func Extract(root string, r io.Reader) error {
 	return zr.Close()
 }
 
-// CreateFile writes the files contained in root as a gzipped tar archive to
-// filename.
+// CreateArchive writes the files contained in root as a gzipped tar archive
+// to filename.
 // The file strings in files can contain directory paths (starting from root).
 func CreateArchive(filename, root string, files []string) error {
 	f, err := os.Create(filename)
