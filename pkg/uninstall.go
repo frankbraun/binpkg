@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 
@@ -47,8 +48,15 @@ func Uninstall(prefix string) error {
 
 	// 5. Delete all files contained in `.codechain/binpkg/$GOOS_$GOARCH` from
 	//    the directory hierarchy rooted at `$prefix`.
-
-	// TODO
+	entries, err := tree.List(root, nil)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if err := os.Remove(filepath.Join(prefix, entry.Filename)); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
