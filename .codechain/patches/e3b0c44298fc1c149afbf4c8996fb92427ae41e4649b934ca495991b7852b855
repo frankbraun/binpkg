@@ -1,0 +1,1576 @@
+codechain patchfile version 2
+treehash e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
++ f 73836584b0f37ce876d1969e2af22a63fbdd77c6fc3e26ea8cc30c20bbb5b413 Makefile
+utf8file 28
+prefix ?= /usr/local
+exec_prefix ?= $(prefix)
+bindir ?= $(exec_prefix)/bin
+
+.PHONY: all install uninstall fmt test update-vendor
+
+all:
+	env GO111MODULE=on go build -mod vendor -v .
+
+install:
+	env GO111MODULE=on GOBIN=$(bindir) go install -mod vendor -v .
+
+uninstall:
+	rm -f $(bindir)/binpkg
+
+fmt:
+	mdfmt -i -w README.md
+
+test:
+	go get github.com/frankbraun/gocheck
+	gocheck -g -c
+
+update-vendor:
+	rm -rf vendor
+	env GO111MODULE=on go get -u
+	env GO111MODULE=on go mod tidy -v
+	env GO111MODULE=on go mod vendor
+
++ f bb289f9acd95984005b5965be35687ef7bff94787c7d2868647ea20e206de421 README.md
+utf8file 157
+binpkg — a binary installer for Codechain secure packages
+---------------------------------------------------------
+
+[![GoDoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://godoc.org/github.com/frankbraun/binpkg)
+[![Build
+Status](https://img.shields.io/travis/frankbraun/binpkg.svg?style=flat-square)](https://travis-ci.org/frankbraun/binpkg)
+[![Go Report
+Card](https://goreportcard.com/badge/github.com/frankbraun/binpkg?style=flat-square)](https://goreportcard.com/report/github.com/frankbraun/binpkg)
+
+`binpkg` allows to install binaries as secure packages with
+[Codechain](https://github.com/frankbraun/codechain).
+
+Adding binaries directly to a Codechain secure package would increase
+its size too much and binaries cannot be reviewed in a meaningful way
+anyway.
+
+Under normal circumstances building from source is preferable, but in
+the rare cases where you want to distributed binaries in a secure and
+multiparty reviewed way, you can use `binpkg` as follows:
+
+1.  Add the `.secpkg` file of this `binpkg` repository to the `.secdep`
+    directory of your package.
+2.  Add a Makefile that calls `binpkg download` for `make`,
+    `binpkg install` for `make install`, and `binpkg uninstall` for
+    `make uninstall`. Also make sure to pass through the `$prefix`
+    variable from `make` to the `-p` option for the `binpkg install` and
+    `binpkg uninstall` commands (see example `Makefile`).
+3.  Add the configuration file `config.binpkg` as described below.
+4.  Add a distribution file `$GOOS_$GOARCH.binpkg` for every platform
+    you want to support (with the help of `binpkg generate`, see below).
+5.  Upload the distribution archives to the configured web server paths
+    (as displayed by `binpkg generate`).
+6.  Add all `*.binpkg` files to Codechain, review them, and publish the
+    secure package.
+
+This ensures multiparty signatures of the _hashes_ of all installed
+binaries. Without [Reproducible
+Builds](https://reproducible-builds.org/) this just records in an
+unmodifiable way which binaries have been pushed by the developers. With
+Reproducible Builds these binaries could be audited with the
+corresponding source code, but the specifics of such a procedure are
+outside of the scope of `binpkg`.
+
+Using Codechain secure dependencies allows to extend Codechain with
+binary packages without blowing up Codechain itself unnecessarily.
+
+### Commands
+
+#### `binpkg download`
+
+Download binary package for current platform, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Download_specification)
+for details.
+
+#### `binpkg install`
+
+Install downloaded binary package for current platform, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Install_specification)
+for details.
+
+#### `binpkg uninstall`
+
+Uninstall installed binary package for current platform, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Uninstall_specification)
+for details.
+
+#### `binpkg generate $bindir`
+
+Generate binary package for `$bindir` directory, see
+[specification](https://godoc.org/github.com/frankbraun/binpkg/pkg#hdr-Generate_specification)
+for details.
+
+### Files and directories
+
+#### `config.binpkg`
+
+A binary package configuration file (`config.binpkg`) contains a JSON
+object with the following keys:
+
+    {
+      "URLs": [
+        "list of binary package download URLs"
+      ]
+    }
+
+Example `config.binpkg` file:
+
+    {
+      "URLs": [
+        "http://example.com/binpkg/testpackage",
+        "http://example.net/binpkg/testpackage",
+        "http://example.org/binpkg/testpackage"
+      ]
+    }
+
+#### `$GOOS_$GOARCH.binpkg` files
+
+A `$GOOS_$GOARCH.binpkg` file (e.g., `linux_amd64.binpkg`) contains a
+[tree list](https://godoc.org/github.com/frankbraun/codechain/tree) of
+all files in their relative directories and their hashes that are
+installed by `binpkg install` for this platform.
+
+Example `linux_amd64.binpkg` file:
+
+    x 1c9d23c245ef06a87f178c5d82221b702084540fe072b329c6a992d6036e6649 bin/testbin
+    x e39447e1a9d87131b62ee4f5fcfe0bd11aa5a8c545b706424d38ca7a23d24f9c bin/testbin2
+
+#### `.codechain/binpkg` directory tree
+
+`binpkg` uses the directory tree under `.codechain/binpkg` for temporary
+data. By being under the `.codechain` hierarchy the temporary data is
+excluded from Codechain's hash chain.
+
+`.codechain/binpkg/archives` is used for storing package archive files.
+
+`.codechain/binpkg/$GOOS_$GOARCH` directories are used to extract
+package archives for the corresponding platform in order to check the
+contents and prepare for the installation.
+
+#### path on web server
+
+A common path on a web server would like this:
+
+    URL/binpkg/package_name/$GOOS_$GOARCH/treehash.tar.gz
+
+where:
+
+-   `binpkg` is optional.
+-   `package_name` is the name of the package (optional).
+-   `$GOOS_$GOARCH` is the platform string (mandatory, but not part of
+    URL in `config.binpkg`).
+-   `treehash` is the [tree
+    hash](https://godoc.org/github.com/frankbraun/codechain/tree) in hex
+    notation (lowercase) of all installed files for this platform and
+    `treehash.tar.gz` contains the corresponding directory tree as a
+    `.tar.gz` archive.
+
+### How to use `binpkg` with Codechain secure packages
+
+To use `binpkg` with a [Codechain secure
+package](https://godoc.org/github.com/frankbraun/codechain/secpkg) add
+the `.secpkg` file of `binpkg` to the `.secdep` directory of your
+project and add a `Makefile` similar to this:
+
+    prefix ?= /usr/local
+
+    .PHONY: all install uninstall
+
+    all:
+      binpkg download
+
+    install:
+      binpkg install -p $(prefix)
+
+    uninstall:
+      binpkg uninstall -p $(prefix)
+
++ f 7e12e5df4bae12cb21581ba157ced20e1986a0508dd10d0e8a4ab9a4cf94e85c UNLICENSE
+utf8file 25
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+
++ f 2d92e8ed84498a0b922a99ace31284307006940979f9676eae83ae40fac0c439 binpkg.go
+utf8file 48
+// binpkg is a binary installer for Codechain secure packages.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/frankbraun/binpkg/command"
+)
+
+func usage() {
+	cmd := os.Args[0]
+	fmt.Fprintf(os.Stderr, "Usage: %s download\n", cmd)
+	fmt.Fprintf(os.Stderr, "       %s install [-p prefix]\n", cmd)
+	fmt.Fprintf(os.Stderr, "       %s uninstall [-p prefix]\n", cmd)
+	fmt.Fprintf(os.Stderr, "       %s generate bindir\n", cmd)
+	os.Exit(2)
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		usage()
+	}
+	argv0 := os.Args[0] + " " + os.Args[1]
+	args := os.Args[2:]
+	var err error
+	switch os.Args[1] {
+	case "download":
+		err = command.Download(argv0, args...)
+	case "install":
+		err = command.Install(argv0, args...)
+	case "uninstall":
+		err = command.Uninstall(argv0, args...)
+	case "generate":
+		err = command.Generate(argv0, args...)
+	default:
+		usage()
+	}
+	if err != nil {
+		if err != flag.ErrHelp {
+			fmt.Fprintf(os.Stderr, "%s: error: %s\n", os.Args[0], err)
+			os.Exit(1)
+		}
+		os.Exit(2)
+	}
+}
+
++ f a7d05e515383d7b17d3cdf04b888c55412a2bc508545776d23d801fea411ae75 command/command.go
+utf8file 5
+// Package command implements the binpkg commands.
+package command
+
+const defaultPrefix = "/usr/local"
+
++ f 96a74e9098a31e02d7ad1a754ce227fe6bbeb1a809be2561fd00a62585723692 command/download.go
+utf8file 28
+package command
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/frankbraun/binpkg/pkg"
+)
+
+// Download implements the 'download' command.
+func Download(argv0 string, args ...string) error {
+	fs := flag.NewFlagSet(argv0, flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s\n", argv0)
+		fmt.Fprintf(os.Stderr, "Download binary package for current platform.\n")
+		fs.PrintDefaults()
+	}
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if fs.NArg() != 0 {
+		fs.Usage()
+		return flag.ErrHelp
+	}
+	return pkg.Download()
+}
+
++ f eeae4f474e6a3b125abbeb2a9c5b9e19933cfc0db3eb55b7b7536b0e5b72fdfd command/generate.go
+utf8file 28
+package command
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/frankbraun/binpkg/pkg"
+)
+
+// Generate implements the 'generate' command.
+func Generate(argv0 string, args ...string) error {
+	fs := flag.NewFlagSet(argv0, flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s bindir\n", argv0)
+		fmt.Fprintf(os.Stderr, "Generate binary package for bindir directory.\n")
+		fs.PrintDefaults()
+	}
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if fs.NArg() != 1 {
+		fs.Usage()
+		return flag.ErrHelp
+	}
+	return pkg.Generate(fs.Arg(0))
+}
+
++ f 74a73132560b661540840e7aa41881d94d443dae2694b22766600b41b57532dd command/install.go
+utf8file 29
+package command
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/frankbraun/binpkg/pkg"
+)
+
+// Install implements the 'install' command.
+func Install(argv0 string, args ...string) error {
+	fs := flag.NewFlagSet(argv0, flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s\n", argv0)
+		fmt.Fprintf(os.Stderr, "Install downloaded binary package for current platform.\n")
+		fs.PrintDefaults()
+	}
+	prefix := fs.String("p", defaultPrefix, "Set prefix")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if fs.NArg() != 0 {
+		fs.Usage()
+		return flag.ErrHelp
+	}
+	return pkg.Install(*prefix)
+}
+
++ f 7f94a78b96fd3c59afe9b32ec5b45ca99ba796bad6cc9e6056562d7012e9f9a0 command/uninstall.go
+utf8file 29
+package command
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/frankbraun/binpkg/pkg"
+)
+
+// Uninstall implements the 'uninstall' command.
+func Uninstall(argv0 string, args ...string) error {
+	fs := flag.NewFlagSet(argv0, flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s\n", argv0)
+		fmt.Fprintf(os.Stderr, "Uninstall installed binary package for current platform.\n")
+		fs.PrintDefaults()
+	}
+	prefix := fs.String("p", defaultPrefix, "Set prefix")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if fs.NArg() != 0 {
+		fs.Usage()
+		return flag.ErrHelp
+	}
+	return pkg.Uninstall(*prefix)
+}
+
++ f 6c3fc0e22d6486babdc2104e320d8382a2fe09a2eb0af800dc4e97fea9891c8c config/config.go
+utf8file 51
+// Package config implements the config.binpkg configuration format.
+package config
+
+import (
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"math/rand"
+	"time"
+)
+
+// Config for binary packages.
+type Config struct {
+	URLs []string // Download URLs
+}
+
+// Load a config.binpkg file from filename and return the Config struct.
+func Load(filename string) (*Config, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	var cfg Config
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, err
+}
+
+// Marshal cfg as string.
+func (cfg *Config) Marshal() string {
+	jsn, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		panic(err) // should never happen
+	}
+	return string(jsn)
+}
+
+// RandomURLs returns the URLs from cfg in random order.
+func (cfg *Config) RandomURLs() ([]string, error) {
+	if len(cfg.URLs) == 0 {
+		return nil, errors.New("config: no URL defined")
+	}
+	urls := append([]string{}, cfg.URLs...)
+	rand.Seed(time.Now().Unix())
+	rand.Shuffle(len(urls), func(i, j int) {
+		urls[i], urls[j] = urls[j], urls[i]
+	})
+	return urls, nil
+}
+
++ f 3f492a5914abcffb959b8f1b74b9f3bad7a04d671cebead2da406426eeff361c go.mod
+utf8file 6
+module github.com/frankbraun/binpkg
+
+go 1.12
+
+require github.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5
+
++ f d8c54795c93519b7dd2f54cccb11161b2984f84af2c3f008290b7b024303c486 go.sum
+utf8file 21
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
+github.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5 h1:n6YP9d+gJ+EWK2I77nfRa2FRlmfd5alPwnvzKn2fpMU=
+github.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5/go.mod h1:xHlm95KQaNK0f5R1XJfUbWLwCDhr+GwD2uVgAY80Whc=
+github.com/frankbraun/go-diff v1.0.0/go.mod h1:Wrp+O0MYpykg99dB2rA1oVnZk8/DdkLis2QWAWR6QfU=
+github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
+github.com/mattn/go-isatty v0.0.8/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
+github.com/mutecomm/mute v0.0.0-20180427225835-8124193e6371/go.mod h1:V0AN5RERqeAJ0oaqiH0WzgjFmdm2FFT+hmSU1hI1Aq8=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
+golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
+golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
+golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20190621203818-d432491b9138/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+
++ f 2108b535629cb30dca228d8be2e3d3fa6db6bcf10883a6718f5b7dcdd9f5c647 internal/def/def.go
+utf8file 17
+// Package def defines default values used in binpkg.
+package def
+
+import (
+	"path/filepath"
+)
+
+// ConfigFile is the default config file.
+const ConfigFile = "config.binpkg"
+
+// ArchiveDir is the default archive directory.
+var ArchiveDir string
+
+func init() {
+	ArchiveDir = filepath.Join(".codechain", "binpkg", "archives")
+}
+
++ f 32cbf94c856392298ae2ebcafccd0a3966655af967dfd17edf4000bbe42581d7 pkg/doc.go
+utf8file 66
+/*
+Package pkg implements binary packages.
+
+Download specification
+
+Downloading binary packages works as follows:
+
+  1. Parse the `config.binpkg` file.
+  2. Determine the `$GOOS` and `$GOARCH` we are currently running on.
+  3. Read the corresponding `$GOOS_$GOARCH.binpkg` file and hash it to
+     `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
+  4. Pick a random URL from the `config.binpkg` file and try to download
+     `URL/$GOOS_$GOARCH/treehash.tar.gz` to `.codechain/binpkg/archives`.
+  5. If download (or verification, see below) failed, try next URL.
+     Abort, if all downloads fail permanently.
+  6. Remove directory `.codechain/binpkg/$GOOS_$GOARCH`.
+  7. Create directory `.codechain/binpkg/$GOOS_$GOARCH`.
+  8. Extract `treehash.tar.gz` to `.codechain/binpkg/$GOOS_$GOARCH` and
+     calculate tree hash. If the calculated tree hash does not equal
+     `treehash` goto 5.
+  9. The binary package to install for the current `$GOOS` and `$GOARCH`
+     is now contained in the directory hierarchy under
+     `.codechain/binpkg/$GOOS_$GOARCH`.
+
+Install specification
+
+Installing binary packages works as follows:
+
+  1. If `$prefix` is not set, set `$prefix=/usr/local`.
+  2. Determine the `$GOOS` and `$GOARCH` we are currently running on.
+  3. Read the corresponding `$GOOS_$GOARCH.binpkg` file and hash it to
+     `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
+  4. Calculate tree hash of `.codechain/binpkg/$GOOS_GOARCH`. Abort, if
+     the calculated tree hash does not equal `treehash`.
+  5. Install: `cp -rf .codechain/binpkg/$GOOS_$GOARCH/* $prefix`
+
+Uninstall specification
+
+Uninstalling binary packages works as follows:
+
+  1. If `$prefix` is not set, set `$prefix=/usr/local`.
+  2. Determine the `$GOOS` and `$GOARCH` we are currently running on.
+  3. Read corresponding `$GOOS_$GOARCH.binpkg` file and hash it to
+     `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
+  4. Calculate tree hash of `.codechain/binpkg/$GOOS_GOARCH`. Abort, if
+     the calculated tree hash does not equal `treehash`.
+  5. Delete all files contained in `.codechain/binpkg/$GOOS_$GOARCH` from
+     the directory hierarchy rooted at `$prefix`.
+
+Generate specification
+
+Generating binary packages works as follows:
+
+  1. Parse the `config.binpkg` file.
+  2. Ensure that the base name of `$bindir` is a valid `$GOOS_$GOARCH`
+     combination.
+  3. Ensure that the file `$GOOS_$GOARCH.binpkg` does not exist.
+  4. Calculate the tree list of `$bindir`, write it to
+     `$GOOS_$GOARCH.binpkg`, and hash it to `treehash`.
+  5. Write the directory hierarchy below `$bindir` as as archive to
+     `.codechain/binpkg/archives/treehash.tar.gz`.
+  6. Display all paths `URL/$GOOS_$GOARCH/treehash.tar.gz` where
+     `.codechain/binpkg/archives/treehash.tar.gz` needs to be uploaded to.
+*/
+package pkg
+
++ f e8073f2722c757fe6687c4b565aebd088caf4e7d2613f55da2161b7e82c48606 pkg/download.go
+utf8file 99
+package pkg
+
+import (
+	"crypto/sha256"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"runtime"
+
+	"github.com/frankbraun/binpkg/config"
+	"github.com/frankbraun/binpkg/internal/def"
+	"github.com/frankbraun/binpkg/tar"
+	"github.com/frankbraun/codechain/tree"
+	"github.com/frankbraun/codechain/util/file"
+	"github.com/frankbraun/codechain/util/hex"
+)
+
+// Download binary package, see specification for details.
+func Download() error {
+	// 1. Parse the `config.binpkg` file.
+	cfg, err := config.Load(def.ConfigFile)
+	if err != nil {
+		return err
+	}
+
+	// 2. Determine the `$GOOS` and `$GOARCH` we are currently running on.
+	platform := runtime.GOOS + "_" + runtime.GOARCH
+
+	// 3. Read the corresponding `$GOOS_$GOARCH.binpkg` file and hash it to
+	//    `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
+	b, err := ioutil.ReadFile(platform + ".binpkg")
+	if err != nil {
+		return err
+	}
+	h := sha256.Sum256(b)
+	treehash := hex.Encode(h[:])
+
+	// 4. Pick a random URL from the `config.binpkg` file and try to download
+	//    `URL/$GOOS_$GOARCH/treehash.tar.gz` to `.codechain/binpkg/archives`.
+	urls, err := cfg.RandomURLs()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(def.ArchiveDir, 0755); err != nil {
+		return err
+	}
+	archive := filepath.Join(def.ArchiveDir, treehash+".tar.gz")
+
+	for _, url := range urls {
+		fullURL := url + "/" + platform + "/" + treehash + ".tar.gz"
+		fmt.Printf("downloading '%s'...\n", fullURL)
+		if err := file.Download(archive, fullURL); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: download failed, try net URL\n")
+			continue
+		}
+		fmt.Println("done.")
+
+		// 5. If download (or verification, see below) failed, try next URL.
+		//    Abort, if all downloads fail permanently.
+
+		// handled after for loop
+
+		// 6. Remove directory `.codechain/binpkg/$GOOS_$GOARCH`.
+		root := filepath.Join(".codechain", "binpkg", platform)
+		if err := os.RemoveAll(root); err != nil {
+			return err
+		}
+
+		// 7. Create directory `.codechain/binpkg/$GOOS_$GOARCH`.
+		if err := os.MkdirAll(root, 0755); err != nil {
+			return err
+		}
+
+		// 8. Extract `treehash.tar.gz` to `.codechain/binpkg/$GOOS_$GOARCH` and
+		//    calculate tree hash. If the calculated tree hash does not equal
+		//    `treehash` goto 5.
+		if err := tar.ExtractArchive(root, archive); err != nil {
+			return err
+		}
+		th, err := tree.Hash(root, nil)
+		if err != nil {
+			return err
+		}
+		if hex.Encode(th[:]) != treehash {
+			fmt.Fprintf(os.Stderr, "warning: treehashes did not match for archive, try next URL\n")
+			continue
+		}
+
+		// 9. The binary package to install for the current `$GOOS` and `$GOARCH`
+		//    is now contained in the directory hierarchy under
+		//    `.codechain/binpkg/$GOOS_$GOARCH`.
+		fmt.Printf("package ready to install in '%s'\n", root)
+		return nil
+	}
+	return errors.New("no valid archive found")
+}
+
++ f 45dfddffb4f07e920e6821a1c57d6aa1ae0b902a55ba67866c22fe10499347ea pkg/generate.go
+utf8file 80
+package pkg
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
+	"github.com/frankbraun/binpkg/config"
+	"github.com/frankbraun/binpkg/internal/def"
+	"github.com/frankbraun/binpkg/tar"
+	"github.com/frankbraun/codechain/tree"
+	"github.com/frankbraun/codechain/util/file"
+	"github.com/frankbraun/codechain/util/hex"
+)
+
+// Generate binary package, see specification for details.
+func Generate(bindir string) error {
+	// 1. Parse the `config.binpkg` file.
+	cfg, err := config.Load(def.ConfigFile)
+	if err != nil {
+		return err
+	}
+
+	// 2. Ensure that the base name of `$bindir` is a valid `$GOOS_$GOARCH`
+	//    combination.
+	platform := filepath.Base(bindir)
+	if err := platformIsValid(platform); err != nil {
+		return err
+	}
+
+	// 3. Ensure that the file `$GOOS_$GOARCH.binpkg` does not exist.
+	filename := platform + ".binpkg"
+	exists, err := file.Exists(filename)
+	if err != nil {
+		return err
+	}
+	if exists {
+		fmt.Errorf("file '%s' exists already", filename)
+	}
+
+	// 4. Calculate the tree list of `$bindir`, write it to
+	//    `$GOOS_$GOARCH.binpkg`, and hash it to `treehash`.
+	entries, err := tree.List(bindir, nil)
+	if err != nil {
+		return err
+	}
+	h := tree.HashList(entries)
+	treehash := hex.Encode(h[:])
+	if err := ioutil.WriteFile(filename, tree.PrintList(entries), 0644); err != nil {
+		return err
+	}
+	fmt.Printf("'%s' written \n", filename)
+
+	// 5. Write the directory hierarchy below `$bindir` as as archive to
+	//    `.codechain/binpkg/archives/treehash.tar.gz`.
+	if err := os.MkdirAll(def.ArchiveDir, 0755); err != nil {
+		return err
+	}
+	archive := filepath.Join(def.ArchiveDir, treehash+".tar.gz")
+	var files []string
+	for _, entry := range entries {
+		files = append(files, entry.Filename)
+	}
+	if err := tar.CreateArchive(archive, bindir, files); err != nil {
+		return err
+	}
+	fmt.Printf("'%s' written \n", archive)
+
+	// 6. Display all paths `URL/$GOOS_$GOARCH/treehash.tar.gz` where
+	//    `.codechain/binpkg/archives/treehash.tar.gz` needs to be uploaded to.
+	fmt.Printf("upload '%s' to the following URLs:\n", archive)
+	fmt.Println()
+	for _, url := range cfg.URLs {
+		fmt.Println(url + "/" + platform + "/" + treehash + ".tar.gz")
+	}
+
+	return nil
+}
+
++ f 7df1d354d0bd746ab53cc31cbae13a65aa30f8edccdeac070527dabf6ebf963b pkg/install.go
+utf8file 68
+package pkg
+
+import (
+	"crypto/sha256"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"runtime"
+
+	"github.com/frankbraun/codechain/tree"
+	"github.com/frankbraun/codechain/util/file"
+	"github.com/frankbraun/codechain/util/hex"
+)
+
+// Install binary package, see specification for details.
+func Install(prefix string) error {
+	// 1. If `$prefix` is not set, set `$prefix=/usr/local`.
+	if prefix == "" {
+		// `$prefix` should have been set on command line
+		return errors.New("prefix not set")
+	}
+
+	// 2. Determine the `$GOOS` and `$GOARCH` we are currently running on.
+	platform := runtime.GOOS + "_" + runtime.GOARCH
+
+	// 3. Read the corresponding `$GOOS_$GOARCH.binpkg` file and hash it to
+	//    `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
+	binpkg := platform + ".binpkg"
+	b, err := ioutil.ReadFile(binpkg)
+	if err != nil {
+		return err
+	}
+	h := sha256.Sum256(b)
+	treehash := hex.Encode(h[:])
+
+	// 4. Calculate tree hash of `.codechain/binpkg/$GOOS_GOARCH`. Abort, if
+	//    the calculated tree hash does not equal `treehash`.
+	root := filepath.Join(".codechain", "binpkg", platform)
+	th, err := tree.Hash(root, nil)
+	if err != nil {
+		return err
+	}
+	if hex.Encode(th[:]) != treehash {
+		return fmt.Errorf("treehashes do not match for '%s' and '%s'",
+			binpkg, root)
+	}
+
+	// 5. Install: `cp -rf .codechain/binpkg/$GOOS_$GOARCH/* $prefix`
+	entries, err := tree.List(root, nil)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		src := filepath.Join(root, entry.Filename)
+		dst := filepath.Join(prefix, entry.Filename)
+		if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+			return err
+		}
+		os.Remove(dst) // remove target first
+		if err := file.Copy(src, dst); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
++ f 11923e68cc9c682ddd1e3d9cf633b6bc5b5deaf61e9cfd66f70cd9d8e1e5e3eb pkg/platform.go
+utf8file 61
+package pkg
+
+import (
+	"fmt"
+
+	"github.com/frankbraun/codechain/util"
+)
+
+// computed by `go tool dist list`
+var validPlatforms = []string{
+	"aix_ppc64",
+	"android_386",
+	"android_amd64",
+	"android_arm",
+	"android_arm64",
+	"darwin_386",
+	"darwin_amd64",
+	"darwin_arm",
+	"darwin_arm64",
+	"dragonfly_amd64",
+	"freebsd_386",
+	"freebsd_amd64",
+	"freebsd_arm",
+	"js_wasm",
+	"linux_386",
+	"linux_amd64",
+	"linux_arm",
+	"linux_arm64",
+	"linux_mips",
+	"linux_mips64",
+	"linux_mips64le",
+	"linux_mipsle",
+	"linux_ppc64",
+	"linux_ppc64le",
+	"linux_s390x",
+	"nacl_386",
+	"nacl_amd64p32",
+	"nacl_arm",
+	"netbsd_386",
+	"netbsd_amd64",
+	"netbsd_arm",
+	"openbsd_386",
+	"openbsd_amd64",
+	"openbsd_arm",
+	"plan9_386",
+	"plan9_amd64",
+	"plan9_arm",
+	"solaris_amd64",
+	"windows_386",
+	"windows_amd64",
+	"windows_arm",
+}
+
+// platformIsValid makes sure the given platform is valid.
+func platformIsValid(platform string) error {
+	if !util.ContainsString(validPlatforms, platform) {
+		fmt.Errorf("'%s' is not a valid platform", platform)
+	}
+	return nil
+}
+
++ f 2beeab829e812924d0194d509036b334ebd047ab8a5a2dab1767941adf52d559 pkg/uninstall.go
+utf8file 63
+package pkg
+
+import (
+	"crypto/sha256"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"runtime"
+
+	"github.com/frankbraun/codechain/tree"
+	"github.com/frankbraun/codechain/util/hex"
+)
+
+// Uninstall binary package, see specification for details.
+func Uninstall(prefix string) error {
+	// 1. If `$prefix` is not set, set `$prefix=/usr/local`.
+	if prefix == "" {
+		// `$prefix` should have been set on command line
+		return errors.New("prefix not set")
+	}
+
+	// 2. Determine the `$GOOS` and `$GOARCH` we are currently running on.
+	platform := runtime.GOOS + "_" + runtime.GOARCH
+
+	// 3. Read corresponding `$GOOS_$GOARCH.binpkg` file and hash it to
+	//    `treehash`. Abort, if `$GOOS_$GOARCH.binpkg` does not exist.
+	binpkg := platform + ".binpkg"
+	b, err := ioutil.ReadFile(binpkg)
+	if err != nil {
+		return err
+	}
+	h := sha256.Sum256(b)
+	treehash := hex.Encode(h[:])
+
+	// 4. Calculate tree hash of `.codechain/binpkg/$GOOS_GOARCH`. Abort, if
+	//    the calculated tree hash does not equal `treehash`.
+	root := filepath.Join(".codechain", "binpkg", platform)
+	th, err := tree.Hash(root, nil)
+	if err != nil {
+		return err
+	}
+	if hex.Encode(th[:]) != treehash {
+		return fmt.Errorf("treehashes do not match for '%s' and '%s'",
+			binpkg, root)
+	}
+
+	// 5. Delete all files contained in `.codechain/binpkg/$GOOS_$GOARCH` from
+	//    the directory hierarchy rooted at `$prefix`.
+	entries, err := tree.List(root, nil)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if err := os.Remove(filepath.Join(prefix, entry.Filename)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
++ f db1118d67771e35740522418f9aed2604549b4d67628001772c672b8ed627a46 tar/tar.go
+utf8file 114
+// Package tar reads and writes gzipped tar files.
+package tar
+
+import (
+	"archive/tar"
+	"compress/gzip"
+	"io"
+	"os"
+	"path/filepath"
+)
+
+// Create writes the files contained in root as a gzipped tar archive to w.
+// The file strings in files can contain directory paths (starting from root).
+func Create(w io.Writer, root string, files []string) error {
+	zw := gzip.NewWriter(w)
+	tw := tar.NewWriter(zw)
+
+	for _, file := range files {
+		f, err := os.Open(filepath.Join(root, file))
+		if err != nil {
+			return err
+		}
+		fi, err := f.Stat()
+		if err != nil {
+			f.Close()
+			return err
+		}
+		mode := fi.Mode() & os.ModePerm // only keep standard UNIX permission bits
+		hdr := &tar.Header{
+			Name:    file,
+			Mode:    int64(mode),
+			Size:    fi.Size(),
+			ModTime: fi.ModTime(),
+		}
+		if err := tw.WriteHeader(hdr); err != nil {
+			f.Close()
+			return err
+		}
+		if _, err := io.Copy(tw, f); err != nil {
+			f.Close()
+			return err
+		}
+		if err := f.Close(); err != nil {
+			return err
+		}
+	}
+
+	if err := tw.Close(); err != nil {
+		return err
+	}
+	return zw.Close()
+}
+
+// Extract the files contained in the gzipped archive r to the directory
+// hierarchy rooted at root.
+func Extract(root string, r io.Reader) error {
+	zr, err := gzip.NewReader(r)
+	if err != nil {
+		return err
+	}
+	tr := tar.NewReader(zr)
+
+	for {
+		hdr, err := tr.Next()
+		if err != nil {
+			if err == io.EOF {
+				break // end of archive
+			}
+			return err
+		}
+		outdir := filepath.Join(root, filepath.Dir(hdr.Name))
+		if err := os.MkdirAll(outdir, 0755); err != nil {
+			return err
+		}
+		fn := filepath.Join(root, hdr.Name)
+		f, err := os.OpenFile(fn, os.O_CREATE|os.O_WRONLY, os.FileMode(hdr.Mode))
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(f, tr); err != nil {
+			f.Close()
+			return err
+		}
+		if err := f.Close(); err != nil {
+			return err
+		}
+	}
+
+	return zr.Close()
+}
+
+// CreateArchive writes the files contained in root as a gzipped tar archive
+// to filename.
+// The file strings in files can contain directory paths (starting from root).
+func CreateArchive(filename, root string, files []string) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return Create(f, root, files)
+}
+
+// ExtractArchive extracts the files contained in the gzipped archive filename
+// to the directory hierarchy rooted at root.
+func ExtractArchive(root, filename string) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return Extract(root, f)
+}
+
++ f 2bb888d51f2162f663c46274123bb6fa103b7e52cbb2169455929948838d453f testdata/Makefile
+utf8file 13
+prefix ?= /usr/local
+
+.PHONY: all install uninstall
+
+all:
+	binpkg download
+
+install:
+	binpkg install -p $(prefix)
+
+uninstall:
+	binpkg uninstall -p $(prefix)
+
++ f 0055c7742eaf613e97f3a7ee90eddfd8e36528f234e386b56e1575ddd8a8076c testdata/config.binpkg
+utf8file 8
+{
+  "URLs": [
+    "http://example.com/binpkg/testpackage",
+    "http://example.net/binpkg/testpackage",
+    "http://example.org/binpkg/testpackage"
+  ]
+}
+
++ x 1c9d23c245ef06a87f178c5d82221b702084540fe072b329c6a992d6036e6649 testdata/linux_amd64/bin/testbin
+utf8file 4
+#!/bin/sh
+
+echo "hello"
+
++ x e39447e1a9d87131b62ee4f5fcfe0bd11aa5a8c545b706424d38ca7a23d24f9c testdata/linux_amd64/bin/testbin2
+utf8file 4
+#!/bin/sh
+
+echo "hello world"
+
++ f 5d8d084b57b9ef0a6f0d53b59ecad874f8cb932b57cf2d4a8fb3db0da8c2e85c testdata/linux_amd64.binpkg
+utf8file 3
+x 1c9d23c245ef06a87f178c5d82221b702084540fe072b329c6a992d6036e6649 bin/testbin
+x e39447e1a9d87131b62ee4f5fcfe0bd11aa5a8c545b706424d38ca7a23d24f9c bin/testbin2
+
++ f 3ffaf919ade3c8acf0540a3d3181eee32e82ced0df5dda2caa2218520b167f92 vendor/github.com/frankbraun/codechain/tree/tree.go
+utf8file 186
+/*
+Package tree implements functions to hash directory trees.
+
+To calculate the hash of a directory tree (a tree hash) a list of all files in
+the directory root (a tree list) is created as follows.
+
+All the files below the root of the directory tree are traversed in lexical
+order (with filepath.Walk) and printed in this format:
+
+  m xxx filename
+
+Where:
+  m        is the mode ('f' or 'x')
+  xxx      is the SHA256 hash for the file in hex notation
+  filename is the file name with directory prefix starting at root
+
+Example list:
+  f 7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730 bar/baz.txt
+  x b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c foo.txt
+
+The fields are separated with single white space characters and the lines are
+separated with single newline characters.
+
+Directories are only implicitly listed (i.e., if they
+contain files). Entries start with 'f' if it is a regular file (read and
+write permission for user) and with 'x' if it is an executable (read,
+write, and executable for user).
+
+The directory tree must only contain directories, regular files, or executables.
+
+The deterministic tree list serves as the basis for a hash of a directory tree
+(the tree hash), which is the SHA256 hash of the tree list in hex notation.
+*/
+package tree
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+// SHA256 returns the SHA256 hash of the file with given path.
+func SHA256(path string) (*[32]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return nil, err
+	}
+	sum := h.Sum(nil)
+	var hash [32]byte
+	copy(hash[:], sum)
+	return &hash, nil
+}
+
+// ListEntry describes a directory tree entry.
+type ListEntry struct {
+	Mode     rune     // 'f' (regular) or 'x' (binary)
+	Filename string   // Including directory path starting from root
+	Hash     [32]byte // SHA256 hash
+}
+
+// EmptyHash is the hash of an empty directory tree (in hex notation).
+const EmptyHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+// List returns a list in lexical order of ListEntry structs of all files in
+// the file tree rooted at root. See the ListBytes function for details.
+//
+// This is a convenience function to make a tree list accessible without
+// having to parse tree list entries.
+func List(root string, excludePaths []string) ([]ListEntry, error) {
+	var entries []ListEntry
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && !info.Mode().IsRegular() {
+			return fmt.Errorf("%s: neither directory nor normal file", path)
+		}
+		if path == root {
+			return nil
+		}
+		canonical := path
+		if root != "." {
+			canonical = strings.TrimPrefix(path, root)
+			canonical = strings.TrimPrefix(canonical, string(filepath.Separator))
+		}
+		canonical = filepath.ToSlash(canonical)
+		if excludePaths != nil {
+			for _, excludePath := range excludePaths {
+				if excludePath == canonical {
+					if info.IsDir() {
+						return filepath.SkipDir
+					}
+					return nil
+				}
+			}
+		}
+		perm := info.Mode().Perm() & os.ModePerm
+		if info.IsDir() {
+			if perm&0700 != 0700 {
+				return fmt.Errorf("%s: directory doesn't have all user permissions", path)
+			}
+			return nil
+		}
+		var m rune
+		if perm&0100 == 0100 {
+			if perm&0700 != 0700 {
+				return fmt.Errorf("%s: executable is not readable and writable", path)
+			}
+			m = 'x' // executable
+		} else {
+			if perm&0010 > 0 {
+				return fmt.Errorf("%s: regular file is executable for group, but not for user", path)
+			}
+			if perm&0001 > 0 {
+				return fmt.Errorf("%s: regular file is executable for other, but not for user", path)
+			}
+			if perm&0600 != 0600 {
+				return fmt.Errorf("%s: regular file is not readable and writable", path)
+			}
+			m = 'f' // regular file
+		}
+		h, err := SHA256(path)
+		if err != nil {
+			return err
+		}
+		entries = append(entries, ListEntry{m, canonical, *h})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return entries, nil
+}
+
+// PrintList prints a list of (sorted) entries in the canonical tree list
+// format.
+//
+// This is a convience function to bring a list of entries returned by the
+// List functions into the format returned by the ListBytes function.
+func PrintList(entries []ListEntry) []byte {
+	var b bytes.Buffer
+	for _, e := range entries {
+		fmt.Fprintf(&b, "%c %x %s\n", e.Mode, e.Hash[:], e.Filename)
+	}
+	return b.Bytes()
+}
+
+// ListBytes returns a list in lexical order of newline separated hashes of
+// all files in the file tree rooted at root in the canonical format, except
+// for the paths in excludePaths (the tree list).
+func ListBytes(root string, excludePaths []string) ([]byte, error) {
+	entries, err := List(root, excludePaths)
+	if err != nil {
+		return nil, err
+	}
+	return PrintList(entries), nil
+}
+
+// HashList returns the SHA256 hash of a list of entries.
+//
+// This is a convience function to calculate a tree hash out of entries
+// without having to print them first in the canonical format.
+func HashList(entries []ListEntry) [32]byte {
+	return sha256.Sum256(PrintList(entries))
+}
+
+// Hash returns a SHA256 hash of all files and directories in the file tree
+// rooted at root, except for the paths in excludePaths (the tree hash).
+func Hash(root string, excludePaths []string) (*[32]byte, error) {
+	l, err := ListBytes(root, excludePaths)
+	if err != nil {
+		return nil, err
+	}
+	h := sha256.Sum256(l)
+	return &h, nil
+}
+
++ f 8e75f529c51882f12aff2cfb6fafbcd8512bc69e323ae51a7eafe49d569874d0 vendor/github.com/frankbraun/codechain/util/file/file.go
+utf8file 208
+// Package file implements file related utility functions.
+package file
+
+import (
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"unicode/utf8"
+)
+
+// IsBinary returns true if filename is binary and false otherwise.
+// A binary file is defined as a file that doesn't consist entirely of valid
+// UTF-8-encoded runes
+func IsBinary(filename string) (bool, error) {
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return false, err
+	}
+	return !utf8.Valid(b), nil
+}
+
+// Exists checks if filename exists already.
+func Exists(filename string) (bool, error) {
+	_, err := os.Stat(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, err
+}
+
+// Copy source file src to destination file dst.
+// The destination file must not exist already.
+// The source file must exist already and be a regular file.
+func Copy(src, dst string) error {
+	if dst == "." {
+		dst = filepath.Base(src)
+	}
+	if dst != "." {
+		// make sure destination file does not exist already
+		exists, err := Exists(dst)
+		if err != nil {
+			return err
+		}
+		if exists {
+			return fmt.Errorf("destination file '%s' exists already", dst)
+		}
+	}
+	// open source file
+	s, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	// get mode of source file
+	fi, err := s.Stat()
+	if err != nil {
+		return err
+	}
+	// make sure source file is a regular file
+	if !fi.Mode().IsRegular() {
+		return fmt.Errorf("source file '%s' is not a regular file", src)
+	}
+	mode := fi.Mode() & os.ModePerm // only keep standard UNIX permission bits
+	// create destination file
+	d, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, mode)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	// copy content
+	if _, err := io.Copy(d, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+func copyDir(src, dst string, excludePaths []string) error {
+	if dst == "." {
+		dst = filepath.Base(src)
+	}
+	if dst != "." {
+		// make sure destination directory does not exist already
+		exists, err := Exists(dst)
+		if err != nil {
+			return err
+		}
+		if exists {
+			return fmt.Errorf("destination directory '%s' exists already", dst)
+		}
+	}
+	// make sure source directory exists and is a directory
+	fi, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("source directory '%s' is not a directory", src)
+	}
+	// make destination directory
+	mode := fi.Mode() & os.ModePerm // only keep standard UNIX permission bits
+	if err := os.MkdirAll(dst, mode); err != nil {
+		return err
+	}
+	// process source directory
+	files, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+outer:
+	for _, fi := range files {
+		s := filepath.Join(src, fi.Name())
+		d := filepath.Join(dst, fi.Name())
+		if excludePaths != nil {
+			canonical := s
+			if src != "." {
+				canonical = strings.TrimPrefix(s, src)
+				canonical = strings.TrimPrefix(canonical, string(filepath.Separator))
+			}
+			canonical = filepath.ToSlash(canonical)
+			for _, excludePath := range excludePaths {
+				if excludePath == canonical {
+					continue outer
+				}
+			}
+		}
+		if fi.IsDir() {
+			// recursion
+			if err := copyDir(s, d, nil); err != nil {
+				return err
+			}
+		} else {
+			if err := Copy(s, d); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// CopyDir recursively copies the source directory src to destination directory
+// dst. The source directory must exist already and only contain regular files
+// and directories. The destination directory must not exist already.
+func CopyDir(src, dst string) error {
+	return copyDir(src, dst, nil)
+}
+
+// CopyDirExclude recursively copies the source directory src to destination
+// directory dst, except for paths contained in excludePath. The source
+// directory must exist already and only contain regular files and
+// directories. The destination directory must not exist already.
+func CopyDirExclude(src, dst string, excludePaths []string) error {
+	return copyDir(src, dst, excludePaths)
+}
+
+// RemoveAll removes all files and directories in path except the ones given
+// in excludePaths.
+func RemoveAll(path string, excludePaths []string) error {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+outer:
+	for _, fi := range files {
+		if excludePaths != nil {
+			canonical := filepath.ToSlash(fi.Name())
+			for _, excludePath := range excludePaths {
+				if excludePath == canonical {
+					continue outer
+				}
+			}
+		}
+		if err := os.RemoveAll(filepath.Join(path, fi.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Download file from url and write it to filepath.
+// If the file with filepath already exists, it will be overwritten!
+func Download(filepath string, url string) error {
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("downloading '%s' failed: %s", url, resp.Status)
+	}
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
++ f 63c5782111160b024f11097ae875659b3a79a8da8941a6c0b17367e52b0e44e2 vendor/github.com/frankbraun/codechain/util/hex/hex.go
+utf8file 32
+// Package hex implements hex encoding related utility functions.
+package hex
+
+import (
+	"encoding/hex"
+	"fmt"
+)
+
+// Encode returns the hexadecimal encoding of src.
+func Encode(src []byte) string {
+	return hex.EncodeToString(src)
+}
+
+// Decode returns the bytes represented by the hexadecimal string s. Decode
+// expects that src contain only lowercase hexadecimal characters and that the
+// resulting byte slice has length l.
+func Decode(s string, l int) ([]byte, error) {
+	for _, c := range []byte(s) {
+		if 'A' <= c && c <= 'F' {
+			return nil, fmt.Errorf("hex: only lowercase hexadecimal characters are allowed")
+		}
+	}
+	r, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+	if len(r) != l {
+		return nil, fmt.Errorf("hex: wrong length %d (expecting %d): %s", 2*len(r), 2*l, s)
+	}
+	return r, nil
+}
+
++ f 89291b3fed21394300fac2fb89ca517757092f95b30460f779b956eee5515c63 vendor/github.com/frankbraun/codechain/util/util.go
+utf8file 26
+// Package util contains utility functions.
+package util
+
+import (
+	"fmt"
+	"os"
+)
+
+// ContainsString returns true, if the the string array sa contains the string s.
+// Otherwise, it returns false.
+func ContainsString(sa []string, s string) bool {
+	for _, v := range sa {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// Fatal prints err to stderr (prefixed with os.Args[0]) and exits the process
+// with exit code 1.
+func Fatal(err error) {
+	fmt.Fprintf(os.Stderr, "%s: error: %s\n", os.Args[0], err)
+	os.Exit(1)
+}
+
++ f 2c5e8269d3deff497cd3332b5ce9d0681e31086c12332f073325a5ac47aec5fe vendor/modules.txt
+utf8file 6
+# github.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5
+github.com/frankbraun/codechain/tree
+github.com/frankbraun/codechain/util
+github.com/frankbraun/codechain/util/file
+github.com/frankbraun/codechain/util/hex
+
+treehash b8708d16d16ad74ff88a0bc6311166d3bd151648b79f6cce5ce80438e51b625a
