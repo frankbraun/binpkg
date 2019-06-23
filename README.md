@@ -135,7 +135,22 @@ where:
     `treehash.tar.gz` contains the corresponding directory tree as a
     `.tar.gz` archive.
 
-### ToDo
+### How to use `binpkg` with Codechain secure packages
 
--   Make `hello-bin` example project.
--   Add example `Makefile` to README.md.
+To use `binpkg` with a [Codechain secure
+package](https://godoc.org/github.com/frankbraun/codechain/secpkg) add
+the `.secpkg` file of `binpkg` to the `.secdep` directory of your
+project and add a `Makefile` similar to this:
+
+    prefix ?= /usr/local
+
+    .PHONY: all install uninstall
+
+    all:
+      binpkg download
+
+    install:
+      binpkg install -p $(prefix)
+
+    uninstall:
+      binpkg uninstall -p $(prefix)
