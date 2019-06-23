@@ -54,7 +54,7 @@ var validPlatforms = []string{
 // platformIsValid makes sure the given platform is valid.
 func platformIsValid(platform string) error {
 	if !util.ContainsString(validPlatforms, platform) {
-		fmt.Errorf("'%s' is not a valid platform", platform)
+		return fmt.Errorf("'%s' is not a valid platform", platform)
 	}
 	return nil
 }

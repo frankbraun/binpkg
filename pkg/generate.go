@@ -36,7 +36,7 @@ func Generate(bindir string) error {
 		return err
 	}
 	if exists {
-		fmt.Errorf("file '%s' exists already", filename)
+		return fmt.Errorf("file '%s' exists already", filename)
 	}
 
 	// 4. Calculate the tree list of `$bindir`, write it to
