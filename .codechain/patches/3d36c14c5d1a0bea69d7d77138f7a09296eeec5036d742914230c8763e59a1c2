@@ -1,0 +1,47 @@
+codechain patchfile version 2
+treehash 3d36c14c5d1a0bea69d7d77138f7a09296eeec5036d742914230c8763e59a1c2
+- f 3f492a5914abcffb959b8f1b74b9f3bad7a04d671cebead2da406426eeff361c go.mod
++ f b74bd459672de79b619c4d5b21fb5985772ee7f44db6c86a52dbea58f3bbcc39 go.mod
+dmppatch 4
+@@ -43,79 +43,79 @@
+ 12%0A%0A
+-require github.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5%0A
++require github.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7%0A
+- f d8c54795c93519b7dd2f54cccb11161b2984f84af2c3f008290b7b024303c486 go.sum
++ f 718ef2b1706ab0395e5ed79bda948c8b0bb452350492ab5c9217688f7dfc38e1 go.sum
+dmppatch 5
+@@ -260,245 +260,245 @@
+ j4=%0A
+-github.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5 h1:n6YP9d+gJ+EWK2I77nfRa2FRlmfd5alPwnvzKn2fpMU=%0Agithub.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5/go.mod h1:xHlm95KQaNK0f5R1XJfUbWLwCDhr+GwD2uVgAY80Whc=%0A
++github.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7 h1:YSt6dDl7dSuN/Ty9uNryfUjhALR/ibT5UUvBKIN//Sg=%0Agithub.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7/go.mod h1:xHlm95KQaNK0f5R1XJfUbWLwCDhr+GwD2uVgAY80Whc=%0A
+ gith
+- f 45dfddffb4f07e920e6821a1c57d6aa1ae0b902a55ba67866c22fe10499347ea pkg/generate.go
++ f 3ef882ed07676c8ca4fd1cfab420939e96ba493dd64c906b9efe7a0b4148c028 pkg/generate.go
+dmppatch 5
+@@ -906,59 +906,66 @@
+ s %7B%0A
+-%09%09fmt.Errorf(%22file '%25s' exists already%22, filename)%0A
++%09%09return fmt.Errorf(%22file '%25s' exists already%22, filename)%0A
+ %09%7D%0A%0A
+- f 11923e68cc9c682ddd1e3d9cf633b6bc5b5deaf61e9cfd66f70cd9d8e1e5e3eb pkg/platform.go
++ f 22399e7e340a796f8fc1ef667127caac75558948bd5f061a6c7ab100c225b434 pkg/platform.go
+dmppatch 5
+@@ -956,63 +956,70 @@
+ ) %7B%0A
+-%09%09fmt.Errorf(%22'%25s' is not a valid platform%22, platform)%0A
++%09%09return fmt.Errorf(%22'%25s' is not a valid platform%22, platform)%0A
+ %09%7D%0A%09
+- f 8e75f529c51882f12aff2cfb6fafbcd8512bc69e323ae51a7eafe49d569874d0 vendor/github.com/frankbraun/codechain/util/file/file.go
++ f 33b7a6dd0a1d4a30114def6511b892bce9aed8144ac3f17cabaf8bf532f0b200 vendor/github.com/frankbraun/codechain/util/file/file.go
+dmppatch 3
+@@ -5018,28 +5018,461 @@
+ return err%0A%09%7D%0A%09return nil%0A%7D%0A
++%0A// List all entries in dir return them as string array.%0Afunc List(dir string) (%5B%5Dstring, error) %7B%0A%09exists, err := Exists(dir)%0A%09if err != nil %7B%0A%09%09return nil, err%0A%09%7D%0A%09if !exists %7B%0A%09%09return nil, fmt.Errorf(%22directory '%25s' does not exist%22, dir)%0A%09%7D%0A%09files, err := ioutil.ReadDir(dir)%0A%09if err != nil %7B%0A%09%09return nil, err%0A%09%7D%0A%09var entries %5B%5Dstring%0A%09for _, fi := range files %7B%0A%09%09entries = append(entries, fi.Name())%0A%09%7D%0A%09return entries, nil%0A%7D%0A
+- f 2c5e8269d3deff497cd3332b5ce9d0681e31086c12332f073325a5ac47aec5fe vendor/modules.txt
++ f fd0d86ced9888bb5a517882c8f3a267c0fc95f14faae0ff585c5a1aa4d056ee1 vendor/modules.txt
+dmppatch 4
+@@ -1,73 +1,73 @@
+-# github.com/frankbraun/codechain v0.0.0-20190622214237-a5a8912382c5%0A
++# github.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7%0A
+ gith
+treehash 42770c84721bd82a8c56d21a7c3bc7dd7c7abbea36033ffb706e0d19daf2c02a
