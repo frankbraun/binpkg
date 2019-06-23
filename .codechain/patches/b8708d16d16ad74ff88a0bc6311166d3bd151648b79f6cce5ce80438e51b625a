@@ -1,0 +1,19 @@
+codechain patchfile version 2
+treehash b8708d16d16ad74ff88a0bc6311166d3bd151648b79f6cce5ce80438e51b625a
++ f 0ff15836eec5c0c5c4c0d02c6a088481a6efdf5822bede25e53ed1146924970c .secpkg
+utf8file 6
+{
+  "Name": "binpkg",
+  "Head": "3918a460d2145d1c4e65b7962c880ea3e4af3454b89cac210bc40b6d34d7bb4a",
+  "DNS": "binpkg.secpkg.net"
+}
+
+- f bb289f9acd95984005b5965be35687ef7bff94787c7d2868647ea20e206de421 README.md
++ f 008111f00b13fc564a1d34a1301436c5d5d62b10f3acc1457e2d18f427cf83aa README.md
+dmppatch 5
+@@ -5411,54 +5411,75 @@
+ our%0A
+-project and add a %60Makefile%60 similar to this:%0A
++project (as %60binpkg.secpkg%60) and add a %60Makefile%60 similar to this:%0A
+ %0A   
+treehash 098e61df787a7f75d9ecdadd0e2f706ecac662c7eda19dacff99f73f439909e2
