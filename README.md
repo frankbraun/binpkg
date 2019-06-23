@@ -10,21 +10,23 @@ Card](https://goreportcard.com/badge/github.com/frankbraun/binpkg?style=flat-squ
 `binpkg` allows to install binaries as secure packages with
 [Codechain](https://github.com/frankbraun/codechain).
 
-Adding binaries directly to a Codechain secure package would increase
-its size too much and binaries cannot be reviewed in a meaningful way
-anyway.
+Adding binaries directly to a [Codechain secure
+package](https://godoc.org/github.com/frankbraun/codechain/secpkg) would
+increase its size too much and binaries cannot be reviewed in a
+meaningful way anyway.
 
 Under normal circumstances building from source is preferable, but in
 the rare cases where you want to distributed binaries in a secure and
 multiparty reviewed way, you can use `binpkg` as follows:
 
 1.  Add the `.secpkg` file of this `binpkg` repository to the `.secdep`
-    directory of your package.
+    directory of your package (as `binpkg.secpkg`).
 2.  Add a Makefile that calls `binpkg download` for `make`,
     `binpkg install` for `make install`, and `binpkg uninstall` for
     `make uninstall`. Also make sure to pass through the `$prefix`
     variable from `make` to the `-p` option for the `binpkg install` and
-    `binpkg uninstall` commands (see example `Makefile`).
+    `binpkg uninstall` commands (see [`Makefile`
+    example](#makefile-example)).
 3.  Add the configuration file `config.binpkg` as described below.
 4.  Add a distribution file `$GOOS_$GOARCH.binpkg` for every platform
     you want to support (with the help of `binpkg generate`, see below).
@@ -135,12 +137,7 @@ where:
     `treehash.tar.gz` contains the corresponding directory tree as a
     `.tar.gz` archive.
 
-### How to use `binpkg` with Codechain secure packages
-
-To use `binpkg` with a [Codechain secure
-package](https://godoc.org/github.com/frankbraun/codechain/secpkg) add
-the `.secpkg` file of `binpkg` to the `.secdep` directory of your
-project (as `binpkg.secpkg`) and add a `Makefile` similar to this:
+### `Makefile` example
 
     prefix ?= /usr/local
 
