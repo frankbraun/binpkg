@@ -25,9 +25,10 @@ func Create(w io.Writer, root string, files []string) error {
 			f.Close()
 			return err
 		}
+		mode := fi.Mode() & os.ModePerm // only keep standard UNIX permission bits
 		hdr := &tar.Header{
 			Name:    file,
-			Mode:    int64(fi.Mode()),
+			Mode:    int64(mode),
 			Size:    fi.Size(),
 			ModTime: fi.ModTime(),
 		}
