@@ -1,0 +1,26 @@
+codechain patchfile version 2
+treehash 098e61df787a7f75d9ecdadd0e2f706ecac662c7eda19dacff99f73f439909e2
+- f 008111f00b13fc564a1d34a1301436c5d5d62b10f3acc1457e2d18f427cf83aa README.md
++ f cf7f70e08ea4aaf7307370845f18109b5612f02e2c15615d86abc64878252616 README.md
+dmppatch 20
+@@ -656,156 +656,216 @@
+ ).%0A%0A
+-Adding binaries directly to a Codechain secure package would increase%0Aits size too much and binaries cannot be reviewed in a meaningful way%0Aanyway.%0A
++Adding binaries directly to a %5BCodechain secure%0Apackage%5D(https://godoc.org/github.com/frankbraun/codechain/secpkg) would%0Aincrease its size too much and binaries cannot be reviewed in a%0Ameaningful way anyway.%0A
+ %0AUnd
+@@ -1136,39 +1136,60 @@
+ ep%60%0A
+-    directory of your package.%0A
++    directory of your package (as %60binpkg.secpkg%60).%0A
+ 2.  
+@@ -1456,66 +1456,91 @@
+ and%0A
+-    %60binpkg uninstall%60 commands (see example %60Makefile%60).%0A
++    %60binpkg uninstall%60 commands (see %5B%60Makefile%60%0A    example%5D(#makefile-example)).%0A
+ 3.  
+@@ -5283,309 +5283,31 @@
+ e.%0A%0A
+-### How to use %60binpkg%60 with Codechain secure packages%0A%0ATo use %60binpkg%60 with a %5BCodechain secure%0Apackage%5D(https://godoc.org/github.com/frankbraun/codechain/secpkg) add%0Athe %60.secpkg%60 file of %60binpkg%60 to the %60.secdep%60 directory of your%0Aproject (as %60binpkg.secpkg%60) and add a %60Makefile%60 similar to this:%0A
++### %60Makefile%60 example%0A
+ %0A   
+treehash d553e56491049e611e0595a81eb9a000a87f766ecaf098e8b450f5450fc3c69c
