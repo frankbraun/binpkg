@@ -1,0 +1,95 @@
+codechain patchfile version 2
+treehash 42770c84721bd82a8c56d21a7c3bc7dd7c7abbea36033ffb706e0d19daf2c02a
+- f 0ff15836eec5c0c5c4c0d02c6a088481a6efdf5822bede25e53ed1146924970c .secpkg
++ f 8933ba3b0e439d47ef28db4cc0bb0028c455ea933299ebff5bf8f8266a93cc9a .secpkg
+dmppatch 5
+@@ -19,86 +19,86 @@
+ g%22,%0A
+-  %22Head%22: %223918a460d2145d1c4e65b7962c880ea3e4af3454b89cac210bc40b6d34d7bb4a%22,%0A
++  %22Head%22: %227705087e3d673d1089ea77bf567263c51b427371b293553f53ef23e254d1a3e1%22,%0A
+   %22D
+- f 73836584b0f37ce876d1969e2af22a63fbdd77c6fc3e26ea8cc30c20bbb5b413 Makefile
++ f 8d3647645bfb65aaf89143384db589963586b7ae0f5d3c2a81f3eb2255cfeb37 Makefile
+dmppatch 14
+@@ -73,61 +73,74 @@
+ in%0A%0A
+-.PHONY: all install uninstall fmt test update-vendor%0A
++.PHONY: all install uninstall fmt test test-install update-vendor%0A
+ %0Aall
+@@ -333,16 +333,100 @@
+ %0A%0Atest:%0A
++%09# go get github.com/frankbraun/gocheck%0A%09# gocheck -g -c%0A%09gocheck -c%0A%0Atest-install:%0A
+ %09go get 
+@@ -459,23 +459,85 @@
+ eck%0A
+-%09gocheck -g -c%0A
++%09go get golang.org/x/tools/cmd/goimports%0A%09go get -u golang.org/x/lint/golint%0A
+ %0Aupd
+- f b74bd459672de79b619c4d5b21fb5985772ee7f44db6c86a52dbea58f3bbcc39 go.mod
++ f 36e0f9057218e183381b0b051eb464c0f0d019306417f12e00ce6372b64ca183 go.mod
+dmppatch 7
+@@ -34,88 +34,60 @@
+ kg%0A%0A
+-go 1.12%0A
++go 1.13%0A
+ %0A
+-require github.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7%0A
++require github.com/frankbraun/codechain v1.2.0%0A
+- f 718ef2b1706ab0395e5ed79bda948c8b0bb452350492ab5c9217688f7dfc38e1 go.sum
++ f de8381899519b51757fc11d1ce0481fe3b88b1fa94cf1505d87abeccc0f7791f go.sum
+dmppatch 47
+@@ -1,28 +1,339 @@
++github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=%0Agithub.com/cloudflare/cloudflare-go v0.11.0/go.mod h1:/FTeLWG9RAMaxNx2eAJ17d5n0XzlfMjFhU9sjMuKcWo=%0Agithub.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=%0A
+ github.com/davecgh/go-spew v
+@@ -486,330 +486,274 @@
+ 38=%0A
+-github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=%0Agithub.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7 h1:YSt6dDl7dSuN/Ty9uNryfUjhALR/ibT5UUvBKIN//Sg=%0Agithub.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7/go.mod h1:xHlm95KQaNK0f5R1XJfUbWLwCDhr+GwD2uVgAY80Whc=%0A
++github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=%0Agithub.com/frankbraun/codechain v1.2.0 h1:1l5MvmSIvoJjfJwQHW6xhyBbXBswUWITI/opxQ5KhpQ=%0Agithub.com/frankbraun/codechain v1.2.0/go.mod h1:nr3SDPm5pqJS5HHu3FWdr7daodmqF3oW4YKplIPikAg=%0A
+ gith
+@@ -844,100 +844,192 @@
+ fU=%0A
+-github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=%0A
++github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=%0Agithub.com/mattn/go-colorable v0.1.6/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=%0A
+ gith
+@@ -1113,16 +1113,288 @@
+ csrc5s=%0A
++github.com/mattn/go-isatty v0.0.11/go.mod h1:PhnuNfih5lzO57/f3n+odYbM4JtupLOxQOAqxQCu2WE=%0Agithub.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=%0Agithub.com/mattn/go-runewidth v0.0.7/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=%0A
+ github.c
+@@ -1500,16 +1500,196 @@
+ hI1Aq8=%0A
++github.com/olekukonko/tablewriter v0.0.4/go.mod h1:zq6QwlOf5SlnkVbMSr5EoBv3636FWnp+qbPhuoO21uA=%0Agithub.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=%0A
+ github.c
+@@ -1772,16 +1772,217 @@
+ RDYZ/4=%0A
++github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=%0Agithub.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=%0A
+ github.c
+@@ -2064,98 +2064,183 @@
+ ME=%0A
+-github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=%0A
++github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=%0Agithub.com/urfave/cli v1.22.2/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=%0A
+ gola
+@@ -2349,118 +2349,118 @@
+ +w=%0A
+-golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=%0A
++golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=%0A
+ gola
+@@ -2562,16 +2562,123 @@
+ o3Qplg=%0A
++golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=%0A
+ golang.o
+@@ -2994,115 +2994,436 @@
+ Es=%0A
+-golang.org/x/sys v0.0.0-20190621203818-d432491b9138/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=%0A
++golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=%0Agolang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=%0Agolang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=%0Agolang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=%0A
+ gola
+@@ -3498,8 +3498,303 @@
+ yyuwOQ=%0A
++golang.org/x/time v0.0.0-20191024005414-555d28b269f0/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=%0Agopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=%0Agopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=%0A
+- f fd0d86ced9888bb5a517882c8f3a267c0fc95f14faae0ff585c5a1aa4d056ee1 vendor/modules.txt
++ f 172628db13a68ba2b313c89f313ea8bc95aad402ecf1d7a08f1e6bb5af1a1a39 vendor/modules.txt
+dmppatch 4
+@@ -1,73 +1,45 @@
+-# github.com/frankbraun/codechain v0.0.0-20190623223220-d745fbb4dbc7%0A
++# github.com/frankbraun/codechain v1.2.0%0A
+ gith
+treehash 6e23e6240eaac4e1193162efafbaa1fe723ffd944f65d9cbc7b917eaaf337baa
